@@ -42,33 +42,37 @@ for k in range(len(data['folds'])):
     trainX, trainY, testX, testY = selectKmK(data, k)
     for key in MTRY:
         for mult in MTRY_MULT:
-            outFile = f"{classifier_name}_{dataset_name}_fold{k+1}{NTREES}trees_mtry{key}_mult{mult}.tsv"
+            outFile = f"RESULTS/{classifier_name}_{dataset_name}_fold{k+1}_{NTREES}trees_mtry{key}_mult{mult}.tsv"
+            try:
+                clf = setupCLF(classifier_name, NTREES, MTRY[key], mult, NJOBS)
+                trainTimeStart = time.time()
+                clf.fit(trainX, trainY)
+                trainTimeStop = time.time()
     
-            clf = setupCLF(classifier_name, NTREES, MTRY[key], mult, NJOBS)
-            trainTimeStart = time.time()
-            clf.fit(trainX, trainY)
-            trainTimeStop = time.time()
+                trainTime = trainTimeStop - trainTimeStart
     
-            trainTime = trainTimeStop - trainTimeStart
+                testTimeStart = time.time()
+                Yhat = clf.predict(testX)
+                testTimeStop = time.time()
     
-            testTimeStart = time.time()
-            Yhat = clf.predict(testX)
-            testTimeStop = time.time()
+                testTime = testTimeStop - testTimeStart
     
-            testTime = testTimeStop - testTimeStart
+                testError = np.mean(Yhat != testY)
     
-            testError = np.mean(Yhat != testY)
+                df = pd.DataFrame({"Classifier":[classifier_name],
+                    "dataset":[dataset_name],"fold":[k+1], "NTREES":[NTREES],
+                    "testError": [testError], "mtry": [f"{MTRY[key]}+{key}i"],
+                    "mtrymult": [mult], "trainTime":[trainTime],
+                    "testTime":[testTime]})
     
-            df = pd.DataFrame({"Classifier":[classifier_name],
-                "dataset":[dataset_name],"fold":[k+1], "NTREES":[NTREES],
-                "testError": [testError], "mtry": [f"{MTRY[key]}+{key}i"],
-                "mtrymult": [mult], "trainTime":[trainTime],
-                "testTime":[testTime]})
+                out = df.to_csv(index = False, sep = "\t")
+                print(f"\n{out}\n")
+                with open(outFile, "w") as f:
+                    f.write(out)
     
-            out = df.to_csv(index = False, sep = "\t")
-            print(f"\n{out}\n")
-            with open(outFile, "w") as f:
-                f.write(out)
-    
-            del clf
+                del clf
+            except Exception as e:
+                print(f"{e}\n")
+                print("Failed: " + outFile)
+                None
     

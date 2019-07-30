@@ -21,7 +21,11 @@ if [[ "$USER" == "jpatsol1@jhu.edu" ]]; then
 	source ./env/bin/activate
 	module load gcc/6.4.0
 elif [[ "$USER" == "JLP" ]]; then
-	export SLURM_ARRAY_TASK_ID=117
+	#export SLURM_ARRAY_TASK_ID=117 #wine rerf
+	#export SLURM_ARRAY_TASK_ID=238 #wine RF
+	#export SLURM_ARRAY_TASK_ID=359 #wine SKRF
+	#export SLURM_ARRAY_TASK_ID=480 #wine SKX
+	export SLURM_ARRAY_TASK_ID=1 #abalone rerf
 	export NCORES=8
 fi
 
@@ -32,7 +36,7 @@ fi
 DATASET=$(awk '{print $1}' jobMap.dat | sed "$SLURM_ARRAY_TASK_ID q;d")
 CLASSIFIER=$(awk '{print $2}' jobMap.dat | sed "$SLURM_ARRAY_TASK_ID q;d")
 
-
+echo "DATASET=$DATASET	CLASSIFIER=$CLASSIFIER"
 ## Run
 python run.py $DATASET $CLASSIFIER
 
@@ -46,5 +50,5 @@ python run.py $DATASET $CLASSIFIER
 ## To run on MARCC:
 # the jobMap.dat file has 484 lines.
 # So, we'll submit an array job (50 jobs max at once).
-# sbatch --array=1-484%50 master.scr
+# sbatch -o SlurmOUT/slurm-%A_%3a.out --array=1-484%50 master.scr
 

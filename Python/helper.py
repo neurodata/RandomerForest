@@ -4,6 +4,7 @@ import csv
 import math
 import numpy as np
 from numpy import genfromtxt
+from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from rerf.rerfClassifier import rerfClassifier
 
@@ -52,23 +53,36 @@ def read_kfold_data(name):
     return(out)
 
 
+def classRerpresentation(trainY):
+
+    uni = np.bincount(trainY)
+
+    return(None)
+
 def selectKmK(data, k):
 
     ## Get list of indices to hold out
     ## The indices were 1-indexed.
     K = np.asarray(data['folds'][k], 'int') - 1
     
-
     outK = np.ones(data["X"].shape[0], np.bool)
     outK[K] = 0
 
-    inK = np.logical_not(outK)
+    trainX = data["X"][outK,:]
+    trainY = np.asarray(data["Y"][outK], "int")
+
+    Kin = []
+    for j in [ki for ki in range(len(data['folds'])) if ki != k]:
+        Kin += data['folds'][j]
+
+    inK = np.ones(data["X"].shape[0], np.bool)
+    inK[np.asarray(Kin, 'int') - 1] = 0
 
     testX = data["X"][inK,:]
-    testY = data["Y"][inK]
+    testY = np.asarray(data["Y"][inK], 'int')
 
-    trainX = data["X"][outK,:]
-    trainY = data["Y"][outK]
+    #npuy  np.unique(trainY)
+    #Ymap = {uy[0]:uy[1] for uy in zip(range(npuy.shape[0]), npuy)}
 
     return(trainX, trainY, testX, testY)
 
@@ -112,3 +126,32 @@ def setupCLF(classifier_name, NTREES, MTRY, MTRY_MULT, NJOBS):
 
     return(clf)
 
+def stratifiedPartitions(dataset_name, k = 5, random_state=0):
+
+    partition1 = f"processed/cv_partitions/{dataset_name}_partitions.txt"
+
+    #with open(partition1, "r") as fi:
+        
+    outFile = f"processed/stratified_cv_partitions/{dataset_name}_stratefiedPartitions.txt"
+    f_train = f"processed/data/{dataset_name}.csv"
+
+    Y = genfromtxt(f_train, delimiter = ",")[:, -1]
+
+    sss = StratifiedShuffleSplit(n_splits=k, random_state=random_state)
+    sss.get_n_splits(Y, Y)
+
+    print(f"{dataset_name}\n")
+    with open(outFile, "a") as f:
+        for train_index, _ in sss.split(Y, Y):
+            writer = csv.writer(f, delimiter = ",")
+            writer.writerow(list(train_index))
+
+    return(None)
+
+
+
+
+    
+
+
+    
