@@ -1,5 +1,6 @@
 
 import os
+import sys
 import gc
 import argparse
 import time
@@ -44,6 +45,7 @@ for k in range(len(data['folds'])):
         for mult in MTRY_MULT:
             outFile = f"RESULTS/{classifier_name}_{dataset_name}_fold{k+1}_{NTREES}trees_mtry{key}_mult{mult}.tsv"
             try:
+                gc.collect(2)
                 clf = setupCLF(classifier_name, NTREES, MTRY[key], mult, NJOBS)
                 trainTimeStart = time.time()
                 clf.fit(trainX, trainY)
@@ -70,8 +72,23 @@ for k in range(len(data['folds'])):
                 with open(outFile, "w") as f:
                     f.write(out)
     
-                del clf
+
+                sys.stdout.flush()
+                #del clf
+                #time.sleep(0.5)
+                #gc.collect(2)
+
             except Exception as e:
+                df = pd.DataFrame({"Classifier":[classifier_name],
+                    "dataset":[dataset_name],"fold":[k+1], "NTREES":["NA"],
+                    "testError": ["NA"], "mtry": [f"{MTRY[key]}+{key}i"],
+                    "mtrymult": ["NA"], "trainTime":["NA"],
+                    "testTime":["NA"]})
+    
+                out = df.to_csv(index = False, sep = "\t")
+                print(f"\n{out}\n")
+                with open(outFile, "w") as f:
+                    f.write(out)
                 print(f"{e}\n")
                 print("Failed: " + outFile)
                 None

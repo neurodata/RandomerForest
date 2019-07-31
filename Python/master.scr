@@ -25,16 +25,16 @@ elif [[ "$USER" == "JLP" ]]; then
 	#export SLURM_ARRAY_TASK_ID=238 #wine RF
 	#export SLURM_ARRAY_TASK_ID=359 #wine SKRF
 	#export SLURM_ARRAY_TASK_ID=480 #wine SKX
-	export SLURM_ARRAY_TASK_ID=1 #abalone rerf
-	export NCORES=8
+	export SLURM_ARRAY_TASK_ID=2 #abalone rerf
+	export NCORES=1
 fi
 
 
 ##
 ## The file `jobMap.dat` contains the parameters for each run
 ## 
-DATASET=$(awk '{print $1}' jobMap.dat | sed "$SLURM_ARRAY_TASK_ID q;d")
-CLASSIFIER=$(awk '{print $2}' jobMap.dat | sed "$SLURM_ARRAY_TASK_ID q;d")
+DATASET="$(awk '{print $1}' jobMap_filtered_numeric.dat | sed "$SLURM_ARRAY_TASK_ID q;d")"
+CLASSIFIER="$(awk '{print $2}' jobMap_filtered_numeric.dat | sed "$SLURM_ARRAY_TASK_ID q;d")"
 
 echo "DATASET=$DATASET	CLASSIFIER=$CLASSIFIER"
 ## Run
@@ -48,7 +48,11 @@ python run.py $DATASET $CLASSIFIER
 #################### 
 
 ## To run on MARCC:
-# the jobMap.dat file has 484 lines.
+# the file jobMap.dat file has 484 lines.
+# the file jobMap_filtered_numeric.dat file has 220 lines.
 # So, we'll submit an array job (50 jobs max at once).
-# sbatch -o SlurmOUT/slurm-%A_%3a.out --array=1-484%50 master.scr
+# The environment variable SLURM_ARRAY_TASK_ID will enable 
+# reading of parameters from the jobMap.dat file.
+#
+# sbatch -o SlurmOUT/slurm-%A_%3a.out --array=1-220%50 master.scr
 

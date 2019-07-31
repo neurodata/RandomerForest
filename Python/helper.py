@@ -59,6 +59,30 @@ def classRerpresentation(trainY):
 
     return(None)
 
+def mapY(Y):
+    yu = np.unique(Y)
+
+    y_map = {}
+    ##remap Y
+    for i in range(len(yu)):
+        y_map[yu[i]] = i
+
+    newY = np.asarray([y_map[yi] for yi in Y])
+        
+    return(newY, y_map)
+
+
+def unMapY(newY, y_map):
+
+    yu = np.unique(Y)
+
+    y_inverse_map = {v:k for k,v in y_map.items()}
+
+    origY = np.asarray([y_inverse_map[nyi] for nyi in newY])
+
+    return(origY)
+
+
 def selectKmK(data, k):
 
     ## Get list of indices to hold out
